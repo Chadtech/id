@@ -22,6 +22,7 @@ module Id
 
 -}
 
+import Char
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Random.Pcg as Random exposing (Generator)
@@ -76,10 +77,10 @@ decoder =
     Decode.map Id Decode.string
 
 
-{-| A way to generate `Id`s
+{-| A way to generate random `Id`s
 
     import Id exposing (Id)
-    import Random.Pcg as Random
+    import Random.Pcg as Random exposing (Seed)
 
     user : Seed -> ( User, Seed )
     user seed =

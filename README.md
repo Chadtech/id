@@ -34,7 +34,7 @@ Or you can generate random `Id`s..
 ```elm
 
 import Id exposing (Id)
-import Random.Pcg as Random
+import Random.Pcg as Random exposing (Seed)
 
 
 user : Seed -> ( User, Seed )
@@ -49,7 +49,7 @@ user seed =
 
 ```
 
-Why use an `Id` instead of a `String`? Technically, all the following are possible with `String` ids..
+Why use an `Id` instead of a `String`? Technically, both the following are possible with `String` ids..
 
 
 ```elm
@@ -74,8 +74,8 @@ And then of course you can decode and encode `Id`s too..
 
 ```elm
 
-Encode.encode 0 id
--- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWhKR5rQCvigWyeBYmbJTy0dw8bxFcfZV61Vm8m\"" : String
+Encode.encode 0 (Id.encode id)
+-- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\"" : String
 
 Decode.decodeString (Decode.field "id" Id.decoder) "{\"id\":\"19\"}"
 -- Ok (Id 19) : Result String Id
