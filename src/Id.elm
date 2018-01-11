@@ -50,10 +50,10 @@ fromString =
 
 {-| Encode an `Id`
 
-    Encode.encode 0 id
+    Encode.encode 0 (Id.encode id)
     -- ""hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh"" : String
 
-    [ ("id", id) ]
+    [ ("id", Id.encode id) ]
         |> Encode.object
         |> Encode.encode 0
 
