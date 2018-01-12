@@ -33,7 +33,23 @@ type Id
     = Id String
 
 
-{-| -}
+{-| Data that comes from a remote source usually has an id, while data that is made locally doesnt. If thats your situation, using this `Origin` type might be a better way of representing your datas id.
+
+    type alias Car =
+        { origin : Origin
+        , make : String
+        }
+
+    saveCar : Car -> Http.Request (Result Err ())
+    saveCar car =
+        case car.origin of
+            Id id ->
+                Car.update id car
+
+            New ->
+                Car.create car
+
+-}
 type Origin
     = Local
     | Remote Id

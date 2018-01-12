@@ -49,7 +49,7 @@ user seed =
 
 ```
 
-Why use an `Id` instead of a `String`? Technically, both the following are possible with `String` ids..
+Why use an `Id` instead of a `String`? Technically, all of the following are possible with `String` ids..
 
 
 ```elm
@@ -66,18 +66,50 @@ screwUpUser user =
         , email = user.id
     }
 
+
+henry : User
+henry =
+    User "Henry" henrysId
+
 ```
 
-Admittedly these errors seem implausible, but using a separate `Id` type eliminates them entirely. Theres really no functionality lost either, since ids arent meant to change over the life span of the data. Put another way: there really *shouldnt* be any functionality with ids, so using this `Id` type ensures your expectations.
+Admittedly these errors seem implausible, but using a separate `Id` type eliminates them entirely. Theres really no functionality lost either; you cant change an `Id`, but the whole point is that there *shouldnt* be any functionality with ids. Using this `Id` type ensures your expectations.
 
 And then of course you can decode and encode `Id`s too..
 
 ```elm
 
 Encode.encode 0 (Id.encode id)
--- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\"" : String
+-- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\""
 
 Decode.decodeString (Decode.field "id" Id.decoder) "{\"id\":\"19\"}"
 -- Ok (Id 19) : Result String Id
+
+```
+
+# Origin
+
+I am going to describe an app that sounds like something you might have made before. It revolves around a specific data type (say a `Car`), and it has one page where you can create a new `Car` and another where you can edit existing `Car`s. A `Car` is what is it, but if its being updated it already exists and therefore has an id, while if its new it necessarily doesnt exist and doesnt have an id. How do you represent that? Heres an idea..
+
+
+```elm
+
+type Origin
+    = Local
+    | Remote Id
+
+type alias Car =
+    { origin : Origin
+    , make : String
+    }
+
+saveCar : Car -> Http.Request (Result Err ())
+saveCar car =
+    case car.origin of
+        Id id ->
+            Car.update id car
+
+        New ->
+            Car.create car
 
 ```
