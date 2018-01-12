@@ -1,5 +1,5 @@
 {
-    "version": "1.0.2",
+    "version": "1.0.3",
     "summary": "An Id type for your types with ids",
     "repository": "https://github.com/Chadtech/id.git",
     "license": "BSD3",
