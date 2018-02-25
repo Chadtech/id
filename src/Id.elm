@@ -8,6 +8,7 @@ module Id
         , fromString
         , generator
         , insert
+        , merge
         , toDict
         , values
         )
@@ -27,7 +28,7 @@ module Id
 
 # Dict
 
-@docs Dict, insert, toDict, values
+@docs Dict, insert, toDict, values, merge
 
 -}
 
@@ -41,7 +42,7 @@ import Random.Pcg as Random exposing (Generator)
 {-| A dictionary that uses `Id` as keys
 -}
 type Dict a
-    = Dict (Dict.Dict String a)
+    = Dict (a -> Id) (Dict.Dict String a)
 
 
 {-| -}
@@ -155,16 +156,25 @@ toChar int =
 {-| Get just the values of a `Id.Dict`
 -}
 values : Dict a -> List a
-values (Dict dict) =
+values (Dict _ dict) =
     Dict.values dict
 
 
 {-| Insert a new value into an `Id.Dict`
 -}
-insert : (a -> Id) -> a -> Dict a -> Dict a
-insert toId x (Dict dict) =
+insert : a -> Dict a -> Dict a
+insert x (Dict toId dict) =
     Dict.insert (toString (toId x)) x dict
-        |> Dict
+        |> Dict toId
+
+
+{-| Combine two `Id.Dict`. In case of a collision, the values in the first parameter are overwritten. `Id.Dict` are initialized with a function `: a -> Id`, if the functions of the two `Id.Dict` are not the same, the function the first Id.dict` is the one that is used.
+-}
+merge : Dict a -> Dict a -> Dict a
+merge targetDict (Dict _ sourceDict) =
+    sourceDict
+        |> Dict.values
+        |> List.foldr insert targetDict
 
 
 {-| Make a special `Dict` that uses `Id` as keys
@@ -183,7 +193,12 @@ toDict toId xs =
     xs
         |> List.map (pairWithId toId)
         |> Dict.fromList
-        |> Dict
+        |> Dict toId
+
+
+emptyDict : (a -> Id) -> Dict a
+emptyDict toId =
+    Dict toId Dict.empty
 
 
 pairWithId : (a -> Id) -> a -> ( String, a )
