@@ -181,7 +181,7 @@ insert toId x (Dict dict) =
 toDict : (a -> Id) -> List a -> Dict a
 toDict toId xs =
     xs
-        |> List.map toId
+        |> List.map (pairWithId toId)
         |> Dict.fromList
         |> Dict
 
