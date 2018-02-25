@@ -4,6 +4,7 @@ module Id
         , Id
         , Origin(Local, Remote)
         , decoder
+        , emptyDict
         , encode
         , fromString
         , generator
@@ -28,7 +29,7 @@ module Id
 
 # Dict
 
-@docs Dict, insert, toDict, values, merge
+@docs Dict, insert, toDict, values, merge, emptyDict
 
 -}
 
@@ -196,6 +197,8 @@ toDict toId xs =
         |> Dict toId
 
 
+{-| An empty `Id.Dict`
+-}
 emptyDict : (a -> Id) -> Dict a
 emptyDict toId =
     Dict toId Dict.empty
