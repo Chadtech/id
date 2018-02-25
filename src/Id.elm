@@ -1,11 +1,15 @@
 module Id
     exposing
-        ( Id
+        ( Dict
+        , Id
         , Origin(Local, Remote)
         , decoder
         , encode
         , fromString
         , generator
+        , insert
+        , toDict
+        , values
         )
 
 {-| A simple `Id` type for your types that have ids.
@@ -20,12 +24,24 @@ module Id
 
 @docs Origin
 
+
+# Dict
+
+@docs Dict, insert, toDict, values
+
 -}
 
 import Char
+import Dict
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Random.Pcg as Random exposing (Generator)
+
+
+{-| A dictionary that uses `Id` as keys
+-}
+type Dict a
+    = Dict (Dict.Dict String a)
 
 
 {-| -}
@@ -63,6 +79,11 @@ type Origin
 fromString : String -> Id
 fromString =
     Id
+
+
+toString : Id -> String
+toString (Id str) =
+    str
 
 
 {-| Encode an `Id`
@@ -129,3 +150,42 @@ toChar int =
         Char.fromCode (int + 55)
     else
         Char.fromCode (int + 61)
+
+
+{-| Get just the values of a `Id.Dict`
+-}
+values : Dict a -> List a
+values (Dict dict) =
+    Dict.values dict
+
+
+{-| Insert a new value into an `Id.Dict`
+-}
+insert : (a -> Id) -> a -> Dict a -> Dict a
+insert toId x (Dict dict) =
+    Dict.insert (toString (toId x)) x dict
+        |> Dict
+
+
+{-| Make a special `Dict` that uses `Id` as keys
+
+    type alias User =
+        { id : Id
+        , name : String
+        }
+
+
+    Id.toDict .id users : Dict User
+
+-}
+toDict : (a -> Id) -> List a -> Dict a
+toDict toId xs =
+    xs
+        |> List.map toId
+        |> Dict.fromList
+        |> Dict
+
+
+pairWithId : (a -> Id) -> a -> ( String, a )
+pairWithId toId x =
+    ( toString (toId x), x )
