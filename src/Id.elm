@@ -1,17 +1,17 @@
 module Id
     exposing
-        ( Dict
+        ( Db
         , Id
         , Origin(Local, Remote)
         , decoder
-        , emptyDict
+        , emptyDb
         , encode
         , fromString
         , generator
+        , get
         , insert
-        , merge
-        , toDict
-        , values
+        , items
+        , toDb
         )
 
 {-| A simple `Id` type for your types that have ids.
@@ -27,9 +27,9 @@ module Id
 @docs Origin
 
 
-# Dict
+# Db
 
-@docs Dict, insert, toDict, values, merge, emptyDict
+@docs Db, get, insert, toDb, items, emptyDb
 
 -}
 
@@ -42,8 +42,8 @@ import Random.Pcg as Random exposing (Generator)
 
 {-| A dictionary that uses `Id` as keys
 -}
-type Dict a
-    = Dict (a -> Id) (Dict.Dict String a)
+type Db a
+    = Db (a -> Id) (Dict.Dict String a)
 
 
 {-| -}
@@ -154,31 +154,37 @@ toChar int =
         Char.fromCode (int + 61)
 
 
-{-| Get just the values of a `Id.Dict`
+{-| Get the item with a given id, if its in the `Db`
 -}
-values : Dict a -> List a
-values (Dict _ dict) =
+get : Id -> Db a -> Maybe a
+get (Id str) (Db _ dict) =
+    Dict.get str dict
+
+
+{-| Get just the items in a `Db`
+-}
+items : Db item -> List item
+items (Db _ dict) =
     Dict.values dict
 
 
-{-| Insert a new value into an `Id.Dict`
+{-| Insert a new item into a `Db`
 -}
-insert : a -> Dict a -> Dict a
-insert x (Dict toId dict) =
-    Dict.insert (toString (toId x)) x dict
-        |> Dict toId
+insert : item -> Db item -> Db item
+insert item (Db toId dict) =
+    Dict.insert (toString (toId item)) item dict
+        |> Db toId
 
 
-{-| Combine two `Id.Dict`. In case of a collision, the values in the first parameter are overwritten. `Id.Dict` are initialized with a function `: a -> Id`, if the functions of the two `Id.Dict` are not the same, the function the first Id.dict` is the one that is used.
+{-| Remove an item from a `Db`
 -}
-merge : Dict a -> Dict a -> Dict a
-merge targetDict (Dict _ sourceDict) =
-    sourceDict
-        |> Dict.values
-        |> List.foldr insert targetDict
+remove : Id -> Db item -> Db item
+remove (Id str) (Db toId dict) =
+    Dict.remove str dict
+        |> Db toId
 
 
-{-| Make a special `Dict` that uses `Id` as keys
+{-| Make a `Db` that uses `Id` as keys
 
     type alias User =
         { id : Id
@@ -186,24 +192,24 @@ merge targetDict (Dict _ sourceDict) =
         }
 
 
-    Id.toDict .id users : Dict User
+    toDb .id users : Db User
 
 -}
-toDict : (a -> Id) -> List a -> Dict a
-toDict toId xs =
-    xs
+toDb : (item -> Id) -> List item -> Db item
+toDb toId items =
+    items
         |> List.map (pairWithId toId)
         |> Dict.fromList
-        |> Dict toId
+        |> Db toId
 
 
-{-| An empty `Id.Dict`
+{-| An empty `Db`
 -}
-emptyDict : (a -> Id) -> Dict a
-emptyDict toId =
-    Dict toId Dict.empty
+emptyDb : (item -> Id) -> Db item
+emptyDb toId =
+    Db toId Dict.empty
 
 
-pairWithId : (a -> Id) -> a -> ( String, a )
-pairWithId toId x =
-    ( toString (toId x), x )
+pairWithId : (item -> Id) -> item -> ( String, item )
+pairWithId toId item =
+    ( toString (toId item), item )
