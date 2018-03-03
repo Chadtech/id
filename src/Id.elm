@@ -11,6 +11,7 @@ module Id
         , get
         , insert
         , items
+        , remove
         , toDb
         )
 
@@ -29,7 +30,7 @@ module Id
 
 # Db
 
-@docs Db, get, insert, toDb, items, emptyDb
+@docs Db, get, remove, insert, toDb, items, emptyDb
 
 -}
 
