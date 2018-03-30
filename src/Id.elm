@@ -13,6 +13,7 @@ module Id
         , items
         , remove
         , toDb
+        , toString
         )
 
 {-| A simple `Id` type for your types that have ids.
@@ -20,7 +21,7 @@ module Id
 
 # Id
 
-@docs Id, fromString, encode, decoder, generator
+@docs Id, fromString, toString, encode, decoder, generator
 
 
 # Origin
@@ -84,6 +85,8 @@ fromString =
     Id
 
 
+{-| Extract the string from an id.
+-}
 toString : Id -> String
 toString (Id str) =
     str
