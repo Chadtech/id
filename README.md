@@ -34,7 +34,7 @@ Or you can generate random `Id`s..
 ```elm
 
 import Id exposing (Id)
-import Random.Pcg as Random exposing (Seed)
+import Random exposing (Seed)
 
 
 user : Seed -> ( User, Seed )
@@ -83,33 +83,59 @@ Encode.encode 0 (Id.encode id)
 -- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\""
 
 Decode.decodeString (Decode.field "id" Id.decoder) "{\"id\":\"19\"}"
--- Ok (Id 19) : Result String Id
+-- Ok (Id "19") : Result String Id
 
 ```
 
-# Origin Type
+# Db
 
-I am going to describe an app that sounds like something you might have made before. It revolves around a specific data type (say a `Car`), and it has one page where you can create a new `Car` and another where you can edit existing `Car`s. A `Car` is what is it, but if its being updated it already exists and therefore has an id, while if its new it necessarily doesnt exist and doesnt have an id. How do you represent that? Heres an idea..
+If you are dealing with data that comes from a remote source, in all likelihood youll be dealing with a lot of it, and you wont know what data with what ids until run time. Since the range of possible data available is extremely wide, one approach is to manage a little database in the front end side of your application, much like how backend applications manage a database.
+
+This package provides a module called `Db` exposing a ype `Db item`. A `Db item` is, for the most part, just a wrapper around a `Dict String a`. The primary difference is that `Db item`s use `Id`s as keys, and the type signatures of its helper functions were designed assuming the use case of managing a `Db`
 
 
 ```elm
-
-type Origin
-    = Local
-    | Remote Id
-
-type alias Car =
-    { origin : Origin
-    , make : String
+type alias Thread =
+    { title : String
+    , posts : List Id
     }
 
-saveCar : Car -> Http.Request (Result Err ())
-saveCar car =
-    case car.origin of
-        Id id ->
-            Car.update id car
+type alias Post =
+    { author : String
+    , content : String 
+    }
 
-        New ->
-            Car.create car
+threadView : Db Post -> (Id, Thread) -> Html Msg
+threadView postsDb (threadId, thread) =
+    thread.posts
+        |> Db.getMany postsDb
+        |> List.map postView
+        |> (::) (p [] [ Html.text thread.title ])
+        |> div [ css [ threadStyle ] ]
 
+
+postView : (Id, Maybe Post) -> Html Msg
+postView post =
+    div
+        [ css [ postStyle ] ]
+        (postBody post)
+
+
+postBody : (Id, Maybe Post) -> List (Html Msg)
+postBody (id, maybePost) =
+    case maybePost of
+        Just post ->
+            [ p
+                []
+                [ Html.text post.author ]
+            , p 
+                []
+                [ Html.text post.content ]
+            ]
+
+        Nothing ->
+            [ p
+                []
+                [ Html.text "Post not found" ]
+            ]
 ```
