@@ -5,6 +5,8 @@ module Db
         , fromList
         , get
         , getMany
+        , getWithId
+        , getManyWithId
         , insert
         , insertMany
         , remove
@@ -27,7 +29,7 @@ module Db
 
 # Helpers
 
-@docs insert, insertMany, get, getMany, remove, update, map, mapItem
+@docs insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
 
 
 -}
@@ -77,11 +79,18 @@ remove thisId (Db dict) =
 
 
 {-| Get the item under the provided `Id`
-
 -}
 get : Db item -> Id -> Maybe item
 get (Db dict) thisId =
     Dict.get (Id.toString thisId) dict
+
+
+{-| Just like `get`, except it comes with the `Id`, for those cases where you dont want the item separated from its `Id` -}
+getWithId : Db item -> Id -> (Id, Maybe item)
+getWithId db thisId =
+    (thisId, get db thisId)
+
+
 
 
 {-| Get many items from a `Db` from a list of `Ids`. Elements not in the `Db` simply wont appear in the return result.
@@ -91,6 +100,11 @@ getMany db ids =
     ids
         |> List.map (get db)
         |> List.filterMap identity
+
+{-| Get many items from a `Db`, but dont filter out missing results, and pair results with their `Id`-}
+getManyWithId : Db item -> List Id -> List (Id, Maybe item)
+getManyWithId db =
+    List.map (getWithId db)
 
 
 {-| Turn your `Db` into a list

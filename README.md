@@ -73,7 +73,7 @@ henry =
 
 ```
 
-Admittedly these errors seem implausible, but using a separate `Id` type eliminates them entirely. Theres really no functionality lost either; in fact, the whole point is that there *shouldnt* be any functionality with ids. Ids largely just get set and then forgotten about. Using this `Id` type ensures your expectations.
+But with an `Id` type, they arent. Using a separate `Id` type eliminates them entirely. `Id`s also cant be changed or modified, which is a good thing because `Id`s need to be static in order to properly identify their value. Using this `Id` type ensures the expectations you already had about identifiers.
 
 And then of course you can decode and encode `Id`s too..
 
@@ -83,13 +83,13 @@ Encode.encode 0 (Id.encode id)
 -- "\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\""
 
 Decode.decodeString (Decode.field "id" Id.decoder) "{\"id\":\"19\"}"
--- Ok (Id "19") : Result String Id
+-- Ok (fromString "19") : Result String Id
 
 ```
 
 # Db
 
-If you are dealing with data that comes from a remote source, in all likelihood youll be dealing with a lot of it, and you wont know what data with what ids until run time. Since the range of possible data available is extremely wide, one approach is to manage a little database in the front end side of your application, much like how backend applications manage a database.
+You may be dealing with an unknown amount of unknown data at runtime. Its a little tricky dealing with this data because theres always the chance it doesnt exist. Since the range of possible data available is extremely wide and you dont want random data distributed all over your application, one approach is to consolidate everything into a little database in the front end side of your application, much like how backend applications manage a database.
 
 This package provides a module called `Db` exposing a ype `Db item`. A `Db item` is, for the most part, just a wrapper around a `Dict String a`. The primary difference is that `Db item`s use `Id`s as keys, and the type signatures of its helper functions were designed assuming the use case of managing a `Db`
 
@@ -100,15 +100,17 @@ type alias Thread =
     , posts : List Id
     }
 
+
 type alias Post =
     { author : String
     , content : String 
     }
 
+
 threadView : Db Post -> (Id, Thread) -> Html Msg
 threadView postsDb (threadId, thread) =
     thread.posts
-        |> Db.getMany postsDb
+        |> Db.getManyWithId postsDb
         |> List.map postView
         |> (::) (p [] [ Html.text thread.title ])
         |> div [ css [ threadStyle ] ]
