@@ -10,6 +10,8 @@ module Db
         , remove
         , toList
         , update
+        , map
+        , mapItem
         )
 
 {-| A way of storing your data by `Id`
@@ -19,15 +21,14 @@ module Db
 
 @docs Db, empty
 
-
-# Helpers
-
-@docs insert, insertMany, get, getMany, remove, update
-
-
 # List
 
 @docs fromList, toList
+
+# Helpers
+
+@docs insert, insertMany, get, getMany, remove, update, map, mapItem
+
 
 -}
 
@@ -41,7 +42,7 @@ type Db item
     = Db (Dict.Dict String item)
 
 
-{-| Insert an item into the Db under the given id
+{-| Insert an item into the `Db` under the given `Id`
 -}
 insert : Id -> item -> Db item -> Db item
 insert thisId item (Db dict) =
@@ -49,7 +50,7 @@ insert thisId item (Db dict) =
         |> Db
 
 
-{-| Insert many items into the Db under their given ids
+{-| Insert many items into the `Db` under their given `Id`s
 -}
 insertMany : List ( Id, item ) -> Db item -> Db item
 insertMany elements db =
@@ -61,43 +62,38 @@ insertManyHelper ( id, item ) db =
     insert id item db
 
 
-{-| Update an item in a Db, using an update function. If the item doesnt exist in the Db, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, it means the value under that id will be remove
+{-| Update an item in a `Db`, using an update function. If the item doesnt exist in the `Db`, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, the value under that id will be removed.
 -}
 update : Id -> (Maybe item -> Maybe item) -> Db item -> Db item
 update id f db =
-    case Tuple.second <| Tuple.mapSecond f (get db id) of
-        Just i ->
-            insert id i db
+    Dict.update (Id.toString id) f dict
+        |> Db
 
-        Nothing ->
-            remove id db
-
-
-{-| Remove the item at the given id, if it exists
+{-| Remove the item at the given `Id`, if it exists
 -}
 remove : Id -> Db item -> Db item
 remove thisId (Db dict) =
     Db (Dict.remove (Id.toString thisId) dict)
 
 
-{-| Get the item under the provided id, if it exists
-
-The result of `get` is a `(Id, Maybe item)` instead of just a `Maybe item`, because presumably the data and its id will be used together in your software. They are grouped together by default so your software doesnt have to manually group them together.
+{-| Get the item under the provided `Id`
 
 -}
-get : Db item -> Id -> ( Id, Maybe item )
+get : Db item -> Id -> Maybe item
 get (Db dict) thisId =
-    ( thisId, Dict.get (Id.toString thisId) dict )
+    Dict.get (Id.toString thisId) dict
 
 
-{-| Get many items from a Db from a list of Ids.
+{-| Get many items from a `Db` from a list of `Ids`. Elements not in the `Db` simply wont appear in the return result.
 -}
-getMany : Db item -> List Id -> List ( Id, Maybe item )
-getMany db =
-    List.map (get db)
+getMany : Db item -> List Id -> List item 
+getMany db ids =
+    ids
+        |> List.map (get db)
+        |> List.filterMap identity
 
 
-{-| Turn your Db into a list
+{-| Turn your `Db` into a list
 -}
 toList : Db item -> List ( Id, item )
 toList (Db dict) =
@@ -106,18 +102,34 @@ toList (Db dict) =
             (Tuple.mapFirst Id.fromString)
 
 
-{-| Initialize a Db from a list of id-value pairs
+{-| Initialize a `Db` from a list of id-value pairs
 -}
 fromList : List ( Id, item ) -> Db item
 fromList items =
     items
-        |> List.map (Tuple.mapFirst Id.toString)
+        |> List.map 
+            (Tuple.mapFirst Id.toString)
         |> Dict.fromList
         |> Db
 
 
-{-| An empty Db with no entries
+{-| An empty `Db` with no entries
 -}
 empty : Db item
 empty =
     Db Dict.empty
+
+
+{-| Map a `Db` to a different data type.
+-}
+map : (a -> b) -> Db a -> Db b
+map f (Db dict) =
+    Dict.map (always f) dict
+        |> Db
+
+
+{-| Apply a change to just one item in the `Db`, assuming the item is in the `Db` in the first place. This function is just like `update` except deleting the item is not possible.-}
+mapItem : Id -> (item -> item) -> Db item -> Db item
+mapItem id f (Db dict) =
+    Dict.update (Id.toString id) (Maybe.map f) dict
+        |> Db

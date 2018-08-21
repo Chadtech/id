@@ -29,7 +29,7 @@ type Id
     = Id String
 
 
-{-| The only way to make an Id
+{-| Make an id from a string
 
     Id.fromString "vq93rUv0A4"
 
