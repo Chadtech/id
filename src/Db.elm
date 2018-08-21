@@ -67,7 +67,7 @@ insertManyHelper ( id, item ) db =
 {-| Update an item in a `Db`, using an update function. If the item doesnt exist in the `Db`, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, the value under that id will be removed.
 -}
 update : Id -> (Maybe item -> Maybe item) -> Db item -> Db item
-update id f db =
+update id f (Db dict) =
     Dict.update (Id.toString id) f dict
         |> Db
 
