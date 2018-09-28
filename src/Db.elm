@@ -5,15 +5,15 @@ module Db
         , fromList
         , get
         , getMany
-        , getWithId
         , getManyWithId
+        , getWithId
         , insert
         , insertMany
+        , map
+        , mapItem
         , remove
         , toList
         , update
-        , map
-        , mapItem
         )
 
 {-| A way of storing your data by `Id`
@@ -23,14 +23,15 @@ module Db
 
 @docs Db, empty
 
+
 # List
 
 @docs fromList, toList
 
+
 # Helpers
 
 @docs insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
-
 
 -}
 
@@ -46,7 +47,7 @@ type Db item
 
 {-| Insert an item into the `Db` under the given `Id`
 -}
-insert : Id -> item -> Db item -> Db item
+insert : Id item -> item -> Db item -> Db item
 insert thisId item (Db dict) =
     Dict.insert (Id.toString thisId) item dict
         |> Db
@@ -54,62 +55,64 @@ insert thisId item (Db dict) =
 
 {-| Insert many items into the `Db` under their given `Id`s
 -}
-insertMany : List ( Id, item ) -> Db item -> Db item
+insertMany : List ( Id item, item ) -> Db item -> Db item
 insertMany elements db =
     List.foldr insertManyHelper db elements
 
 
-insertManyHelper : ( Id, item ) -> Db item -> Db item
+insertManyHelper : ( Id item, item ) -> Db item -> Db item
 insertManyHelper ( id, item ) db =
     insert id item db
 
 
 {-| Update an item in a `Db`, using an update function. If the item doesnt exist in the `Db`, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, the value under that id will be removed.
 -}
-update : Id -> (Maybe item -> Maybe item) -> Db item -> Db item
+update : Id item -> (Maybe item -> Maybe item) -> Db item -> Db item
 update id f (Db dict) =
     Dict.update (Id.toString id) f dict
         |> Db
 
+
 {-| Remove the item at the given `Id`, if it exists
 -}
-remove : Id -> Db item -> Db item
+remove : Id item -> Db item -> Db item
 remove thisId (Db dict) =
     Db (Dict.remove (Id.toString thisId) dict)
 
 
 {-| Get the item under the provided `Id`
 -}
-get : Db item -> Id -> Maybe item
+get : Db item -> Id item -> Maybe item
 get (Db dict) thisId =
     Dict.get (Id.toString thisId) dict
 
 
-{-| Just like `get`, except it comes with the `Id`, for those cases where you dont want the item separated from its `Id` -}
-getWithId : Db item -> Id -> (Id, Maybe item)
+{-| Just like `get`, except it comes with the `Id`, for those cases where you dont want the item separated from its `Id`
+-}
+getWithId : Db item -> Id item -> ( Id item, Maybe item )
 getWithId db thisId =
-    (thisId, get db thisId)
-
-
+    ( thisId, get db thisId )
 
 
 {-| Get many items from a `Db` from a list of `Ids`. Elements not in the `Db` simply wont appear in the return result.
 -}
-getMany : Db item -> List Id -> List item 
+getMany : Db item -> List (Id item) -> List item
 getMany db ids =
     ids
         |> List.map (get db)
         |> List.filterMap identity
 
-{-| Get many items from a `Db`, but dont filter out missing results, and pair results with their `Id`-}
-getManyWithId : Db item -> List Id -> List (Id, Maybe item)
+
+{-| Get many items from a `Db`, but dont filter out missing results, and pair results with their `Id`
+-}
+getManyWithId : Db item -> List (Id item) -> List ( Id item, Maybe item )
 getManyWithId db =
     List.map (getWithId db)
 
 
 {-| Turn your `Db` into a list
 -}
-toList : Db item -> List ( Id, item )
+toList : Db item -> List ( Id item, item )
 toList (Db dict) =
     Dict.toList dict
         |> List.map
@@ -118,10 +121,10 @@ toList (Db dict) =
 
 {-| Initialize a `Db` from a list of id-value pairs
 -}
-fromList : List ( Id, item ) -> Db item
+fromList : List ( Id item, item ) -> Db item
 fromList items =
     items
-        |> List.map 
+        |> List.map
             (Tuple.mapFirst Id.toString)
         |> Dict.fromList
         |> Db
@@ -142,8 +145,9 @@ map f (Db dict) =
         |> Db
 
 
-{-| Apply a change to just one item in the `Db`, assuming the item is in the `Db` in the first place. This function is just like `update` except deleting the item is not possible.-}
-mapItem : Id -> (item -> item) -> Db item -> Db item
+{-| Apply a change to just one item in the `Db`, assuming the item is in the `Db` in the first place. This function is just like `update` except deleting the item is not possible.
+-}
+mapItem : Id item -> (item -> item) -> Db item -> Db item
 mapItem id f (Db dict) =
     Dict.update (Id.toString id) (Maybe.map f) dict
         |> Db

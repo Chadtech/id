@@ -25,7 +25,7 @@ import Random exposing (Generator)
 
 
 {-| -}
-type Id
+type Id x
     = Id String
 
 
@@ -34,14 +34,14 @@ type Id
     Id.fromString "vq93rUv0A4"
 
 -}
-fromString : String -> Id
+fromString : String -> Id x
 fromString =
     Id
 
 
 {-| Extract the string from an id.
 -}
-toString : Id -> String
+toString : Id x -> String
 toString (Id str) =
     str
 
@@ -58,7 +58,7 @@ toString (Id str) =
     -- {\"id\":\"hDFL0Cs2EqWJ4jc3kMtOrKdEUTWh\"} : String
 
 -}
-encode : Id -> Value
+encode : Id x -> Value
 encode (Id str) =
     Encode.string str
 
@@ -69,7 +69,7 @@ encode (Id str) =
     -- Ok (Id "19") : Result String Id
 
 -}
-decoder : Decoder Id
+decoder : Decoder (Id x)
 decoder =
     Decode.map Id Decode.string
 
@@ -90,7 +90,7 @@ decoder =
         )
 
 -}
-generator : Generator Id
+generator : Generator (Id x)
 generator =
     Random.int 0 61
         |> Random.list 64
