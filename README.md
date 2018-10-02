@@ -20,7 +20,7 @@ type alias User =
 
 # Why an `Id` and not a `String`?
 
-The Elm compiler is totally okay with all of the following code snippets..
+The Elm compiler is totally okay with the following code snippets..
 
 ```elm
 type alias User =
@@ -30,8 +30,9 @@ type alias User =
 
 
 type Msg
-    -- Its kind of unclear what each
-    -- `String` is meant to be right?
+    -- The type signature of this `Msg` is
+    -- unclear about what each `String` is
+    -- supposed to be
     = EmailUpdated String String
 
 -- In your view the first parameter may be `id`..
@@ -57,6 +58,7 @@ viewUser : String -> String -> Html Msg
 viewUser email id =
     -- first parameter is email
     -- second parameter is id
+
 
 view : Model -> Html Msg
 view model =
@@ -99,15 +101,16 @@ updateUsersCatsFavoriteFood userId catId foodId =
 
 Now with `Id x`, it is impossible (again) to mix up a `Id User` with a `Id Cat`. They have different types. And the compiler will point out if you try and use a `Id User` where only a `Id Cat` works.
 
-Admittedly, there is a draw back with this approach. The following code is not possible due
-to a circular definition of `User`.
+# Okay there is one drawback
+
+The following code is not possible due to a circular definition of `User`.
 
 ```elm
 type alias User =
     { id : Id User }
 ```
 
-An easy work around is to do..
+Easy work arounds include..
 
 ```elm
 type UserId
@@ -117,9 +120,14 @@ type alias User =
     { id : Id UserId }
 ```
 
-..but I would encourage you to build your architecture such that data _does not_ contain its own `Id x`. Not only does is it an obstruction in this topic, but it makes it difficult to model data that might not have an id in some cases. For example, if you are creating data you want to submit and save on your backend, what value do you put for the `id` before its submitted to your backend? It must be something, but until your backend saves it it wont truly have an id.
+and
 
-Instead I would encourage you to pair data with its `Id`, much like a key value in a database.
+```elm
+type alias User =
+    { id : Id () }
+```
+
+..but I would encourage you to build your architecture such that data _does not_ contain its own `Id x` to begin with. Instead, you can pair your data with its `Id`, much like a key-value in a database.
 
 ```elm
     (Id User, User)
@@ -130,6 +138,8 @@ Instead I would encourage you to pair data with its `Id`, much like a key value 
 What if you are dealing with a lot of remote data? All the data has ids, and you have no idea what it will be until runtime. One approach is to consolidate everything into a little database on the front end side of your application that acts like a single source of truth for remote data, much like how backend applications manage a database.
 
 This package provides a module called `Db` exposing a type `Db item`. for the most part, a `Db item` is just a wrapper around a `Dict String a`. The primary difference is that `Db item`s use `Id`s as keys, and the type signatures of its helper functions were designed assuming the use case of managing a lot of remote data.
+
+# Message Board Example
 
 ```elm
 type alias Thread =
