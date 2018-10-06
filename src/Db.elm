@@ -1,36 +1,25 @@
-module Db
-    exposing
-        ( Db
-        , empty
-        , fromList
-        , get
-        , getMany
-        , getWithId
-        , getManyWithId
-        , insert
-        , insertMany
-        , remove
-        , toList
-        , update
-        , map
-        , mapItem
-        )
+module Db exposing
+    ( Db, empty, toDict
+    , fromList, toList
+    , insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
+    )
 
 {-| A way of storing your data by `Id`
 
 
 # Db
 
-@docs Db, empty
+@docs Db, empty, toDict
+
 
 # List
 
 @docs fromList, toList
 
+
 # Helpers
 
 @docs insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
-
 
 -}
 
@@ -42,6 +31,13 @@ import Id exposing (Id)
 -}
 type Db item
     = Db (Dict.Dict String item)
+
+
+{-| turn a `Db item` into a `Dict String item`
+-}
+toDict : Db item -> Dict.Dict String item
+toDict (Db db) =
+    db
 
 
 {-| Insert an item into the `Db` under the given `Id`
@@ -71,6 +67,7 @@ update id f (Db dict) =
     Dict.update (Id.toString id) f dict
         |> Db
 
+
 {-| Remove the item at the given `Id`, if it exists
 -}
 remove : Id -> Db item -> Db item
@@ -85,24 +82,25 @@ get (Db dict) thisId =
     Dict.get (Id.toString thisId) dict
 
 
-{-| Just like `get`, except it comes with the `Id`, for those cases where you dont want the item separated from its `Id` -}
-getWithId : Db item -> Id -> (Id, Maybe item)
+{-| Just like `get`, except it comes with the `Id`, for those cases where you dont want the item separated from its `Id`
+-}
+getWithId : Db item -> Id -> ( Id, Maybe item )
 getWithId db thisId =
-    (thisId, get db thisId)
-
-
+    ( thisId, get db thisId )
 
 
 {-| Get many items from a `Db` from a list of `Ids`. Elements not in the `Db` simply wont appear in the return result.
 -}
-getMany : Db item -> List Id -> List item 
+getMany : Db item -> List Id -> List item
 getMany db ids =
     ids
         |> List.map (get db)
         |> List.filterMap identity
 
-{-| Get many items from a `Db`, but dont filter out missing results, and pair results with their `Id`-}
-getManyWithId : Db item -> List Id -> List (Id, Maybe item)
+
+{-| Get many items from a `Db`, but dont filter out missing results, and pair results with their `Id`
+-}
+getManyWithId : Db item -> List Id -> List ( Id, Maybe item )
 getManyWithId db =
     List.map (getWithId db)
 
@@ -121,7 +119,7 @@ toList (Db dict) =
 fromList : List ( Id, item ) -> Db item
 fromList items =
     items
-        |> List.map 
+        |> List.map
             (Tuple.mapFirst Id.toString)
         |> Dict.fromList
         |> Db
@@ -142,7 +140,8 @@ map f (Db dict) =
         |> Db
 
 
-{-| Apply a change to just one item in the `Db`, assuming the item is in the `Db` in the first place. This function is just like `update` except deleting the item is not possible.-}
+{-| Apply a change to just one item in the `Db`, assuming the item is in the `Db` in the first place. This function is just like `update` except deleting the item is not possible.
+-}
 mapItem : Id -> (item -> item) -> Db item -> Db item
 mapItem id f (Db dict) =
     Dict.update (Id.toString id) (Maybe.map f) dict
