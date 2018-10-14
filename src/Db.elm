@@ -81,8 +81,7 @@ insertManyHelper ( id, item ) db =
     insert id item db
 
 
-{-| Insert an item into a `Db` without an `Id`. This function takes a `Random.Seed` because it generates a random `Id` for the
-item you are inserting into the `Db`
+{-| Insert an item into a `Db` without an `Id`. This function takes a `Random.Seed` because it generates a random `Id` for the item you are inserting into the `Db`. This function gaurantees no id collisions; if the id it generates already exists, it simply tries again with a different id.
 -}
 insertWithoutId : Seed -> item -> Db item -> ( Db item, Seed )
 insertWithoutId seed item db =
