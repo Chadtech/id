@@ -1,36 +1,57 @@
 module Db exposing
-    ( Db, empty, toDict
-    , fromList, toList
-    , insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
+    ( empty, insert, insertMany, insertWithoutId, update, remove
+    , get, getMany, getWithId, getManyWithId, member
+    , toList, fromList
+    , toDict
+    , map, mapItem
+    , Db
     )
 
 {-| A way of storing your data by `Id`
 
 
-# Db
+# Build
 
-@docs Db, empty, toDict
-
-
-# List
-
-@docs fromList, toList
+@docs empty, insert, insertMany, insertWithoutId, update, remove
 
 
-# Helpers
+# Query
 
-@docs insert, insertMany, get, getWithId, getMany, getManyWithId, remove, update, map, mapItem
+@docs get, getMany, getWithId, getManyWithId, member
+
+
+# Lists
+
+@docs toList, fromList
+
+
+# Dict
+
+@docs toDict
+
+
+# Transform
+
+@docs map, mapItem
 
 -}
 
 import Dict
 import Id exposing (Id)
+import Random exposing (Seed)
 
 
 {-| Short for "Database", it stores data by unique identifiers
 -}
 type Db item
     = Db (Dict.Dict String item)
+
+
+{-| Determine if a certain `Id` is in a `Db`
+-}
+member : Id -> Db item -> Bool
+member id (Db dict) =
+    Dict.member (Id.toString id) dict
 
 
 {-| turn a `Db item` into a `Dict String item`
@@ -58,6 +79,22 @@ insertMany elements db =
 insertManyHelper : ( Id, item ) -> Db item -> Db item
 insertManyHelper ( id, item ) db =
     insert id item db
+
+
+{-| Insert an item into a `Db` without an `Id`. This function takes a `Random.Seed` because it generates a random `Id` for the
+item you are inserting into the `Db`
+-}
+insertWithoutId : Seed -> item -> Db item -> ( Db item, Seed )
+insertWithoutId seed item db =
+    let
+        ( id, nextSeed ) =
+            Random.step Id.generator seed
+    in
+    if member id db then
+        insertWithoutId nextSeed item db
+
+    else
+        insert id item db
 
 
 {-| Update an item in a `Db`, using an update function. If the item doesnt exist in the `Db`, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, the value under that id will be removed.
