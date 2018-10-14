@@ -94,7 +94,7 @@ insertWithoutId seed item db =
         insertWithoutId nextSeed item db
 
     else
-        insert id item db
+        ( insert id item db, nextSeed )
 
 
 {-| Update an item in a `Db`, using an update function. If the item doesnt exist in the `Db`, it comes into the update as `Nothing`. If a `Nothing` comes out of the update function, the value under that id will be removed.
