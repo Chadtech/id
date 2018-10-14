@@ -3,7 +3,7 @@
     "name": "Chadtech/id",
     "summary": "Types and helpers for your types with ids",
     "license": "BSD-3-Clause",
-    "version": "4.1.0",
+    "version": "4.2.0",
     "exposed-modules": [
         "Id",
         "Db"
