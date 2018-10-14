@@ -1,13 +1,18 @@
 module Db exposing
-    ( empty, insert, insertMany, insertWithoutId, update, remove
+    ( Db
+    , empty, insert, insertMany, insertWithoutId, update, remove
     , get, getMany, getWithId, getManyWithId, member
     , toList, fromList
     , toDict
     , map, mapItem
-    , Db
     )
 
 {-| A way of storing your data by `Id`
+
+
+# Db
+
+@docs Db
 
 
 # Build
